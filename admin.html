@@ -1,0 +1,1554 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#16865f">
+  <title>薯条校园 · 管理员后台</title>
+  <style>
+    :root {
+      --bg: #f4f7f5;
+      --surface: #ffffff;
+      --surface-muted: #edf3f0;
+      --ink: #1b2a32;
+      --ink-soft: #42525a;
+      --muted: #718087;
+      --line: #dce6e2;
+      --line-strong: #c8d5d0;
+      --brand-green: #16865f;
+      --brand-green-dark: #0f6d4c;
+      --brand-yellow: #ffb400;
+      --brand-red: #ef5b3f;
+      --brand-blue: #2c6fbb;
+      --danger: #c84343;
+      --shadow-sm: 0 1px 2px rgba(24, 43, 35, 0.05);
+      --shadow-md: 0 14px 34px rgba(24, 43, 35, 0.12);
+      --radius: 8px;
+      --topbar-height: 68px;
+      --content-width: 1240px;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(22, 134, 95, 0.08), transparent 34%),
+        linear-gradient(315deg, rgba(255, 180, 0, 0.08), transparent 38%),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.5;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    svg {
+      display: block;
+    }
+
+    .icon-sprite {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    .mini-icon {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .brand-mark svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: var(--topbar-height);
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      width: min(var(--content-width), calc(100% - 36px));
+      height: 100%;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 210px;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #fff7df;
+      border: 1px solid #f1d382;
+    }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand-copy strong {
+      font-size: 17px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .brand-copy small {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #e9f7f0;
+      color: var(--brand-green-dark);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: var(--brand-green);
+      color: #ffffff;
+      font-weight: 700;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .button-ghost {
+      background: transparent;
+      border-color: var(--line-strong);
+      color: var(--ink-soft);
+    }
+
+    .button-soft {
+      background: var(--surface-muted);
+      border-color: var(--line);
+      color: var(--ink-soft);
+    }
+
+    .button-danger {
+      background: var(--danger);
+    }
+
+    .button-blue {
+      background: var(--brand-blue);
+    }
+
+    .button-yellow {
+      background: #fff7df;
+      border-color: #f1d382;
+      color: #8b5a00;
+    }
+
+    .button-small {
+      min-height: 32px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .button-block {
+      width: 100%;
+    }
+
+    .button[disabled] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .login-screen {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 28px;
+    }
+
+    .login-card {
+      width: min(420px, 100%);
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+    }
+
+    .login-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .login-brand .brand-mark {
+      width: 52px;
+      height: 52px;
+    }
+
+    .login-brand .brand-mark svg {
+      width: 38px;
+      height: 38px;
+    }
+
+    .login-brand h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .login-brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+
+    .field > span {
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      outline: none;
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--brand-green);
+      box-shadow: 0 0 0 3px rgba(22, 134, 95, 0.12);
+    }
+
+    .login-error {
+      display: none;
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: #fff0ed;
+      color: #b52e24;
+      font-size: 13px;
+    }
+
+    .login-error.is-visible {
+      display: block;
+    }
+
+    .admin-screen {
+      display: none;
+    }
+
+    .admin-screen.is-active {
+      display: block;
+    }
+
+    .admin-main {
+      width: min(var(--content-width), calc(100% - 36px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .page-heading h2 {
+      margin: 4px 0 0;
+      font-size: 25px;
+      line-height: 1.25;
+    }
+
+    .section-kicker {
+      margin: 0;
+      color: var(--brand-green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      min-height: 104px;
+      padding: 18px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card .stat-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      color: var(--brand-green);
+      background: #e9f7f0;
+    }
+
+    .stat-card:nth-child(2) .stat-icon {
+      color: var(--brand-blue);
+      background: #eaf3ff;
+    }
+
+    .stat-card:nth-child(3) .stat-icon {
+      color: #a66800;
+      background: #fff4cf;
+    }
+
+    .stat-card:nth-child(4) .stat-icon {
+      color: #b52e24;
+      background: #fff0ed;
+    }
+
+    .stat-card .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat-card .stat-value {
+      margin-top: 2px;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .panel-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface-muted);
+      border-radius: var(--radius);
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tab-btn.is-active {
+      background: #ffffff;
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-box {
+      position: relative;
+      width: min(360px, 100%);
+    }
+
+    .search-box svg {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      width: 18px;
+      height: 18px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .search-box input {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 12px 8px 38px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      outline: none;
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .search-box input:focus {
+      border-color: var(--brand-green);
+      box-shadow: 0 0 0 3px rgba(22, 134, 95, 0.12);
+    }
+
+    .data-wrap {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .data-table th {
+      color: var(--muted);
+      background: #fbfdfc;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .data-table tbody tr:hover td {
+      background: #fbfdfc;
+    }
+
+    .cell-title {
+      font-weight: 800;
+    }
+
+    .cell-sub {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge-green {
+      color: var(--brand-green-dark);
+      background: #e9f7f0;
+    }
+
+    .badge-blue {
+      color: #235f9c;
+      background: #eaf3ff;
+    }
+
+    .badge-yellow {
+      color: #8b5a00;
+      background: #fff4cf;
+    }
+
+    .badge-red {
+      color: #b52e24;
+      background: #fff0ed;
+    }
+
+    .badge-gray {
+      color: #5e6c72;
+      background: #edf1ef;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .card-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .cert-card {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      padding: 16px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .cert-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .cert-card h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .cert-card .cell-sub {
+      margin-top: 3px;
+    }
+
+    .cert-facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .fact {
+      padding: 9px 10px;
+      background: var(--surface-muted);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .fact span {
+      display: block;
+      color: var(--muted);
+    }
+
+    .fact strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .cert-preview {
+      width: 100%;
+      max-height: 210px;
+      object-fit: contain;
+      background: #f3f7f5;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .empty-state {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-state .empty-icon {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: var(--surface-muted);
+      color: var(--muted);
+    }
+
+    .empty-state .empty-icon svg {
+      width: 26px;
+      height: 26px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .empty-state h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    .empty-state p {
+      margin: 6px 0 0;
+      font-size: 13px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(20, 30, 26, 0.48);
+    }
+
+    .modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .modal {
+      width: min(460px, 100%);
+      max-height: min(720px, calc(100vh - 44px));
+      overflow: auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      margin: 3px 0 0;
+      font-size: 19px;
+    }
+
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--surface-muted);
+      color: var(--ink-soft);
+    }
+
+    .icon-btn svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 120;
+      min-width: 220px;
+      max-width: calc(100% - 40px);
+      padding: 11px 15px;
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: #ffffff;
+      font-size: 14px;
+      text-align: center;
+      transform: translate(-50%, 18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 980px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .topbar-inner,
+      .admin-main {
+        width: min(100% - 24px, var(--content-width));
+      }
+
+      .brand-copy small {
+        display: none;
+      }
+
+      .status-pill {
+        display: none;
+      }
+
+      .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .panel-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .tab-btn {
+        flex: 1 0 auto;
+        justify-content: center;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .stats-grid,
+      .card-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-fries" viewBox="0 0 32 32">
+      <path d="M7 13h18l-1.5 13.2a2.6 2.6 0 0 1-2.6 2.4H11.1a2.6 2.6 0 0 1-2.6-2.4L7 13Z" fill="#ef5b3f"/>
+      <path d="M9.5 13V9.2c0-1.2.8-2.2 1.9-2.2h9.2c1.1 0 1.9 1 1.9 2.2V13" fill="none" stroke="#ef5b3f" stroke-width="2"/>
+      <path d="M8 13h16l-1 4.5H9L8 13Z" fill="#ffb400"/>
+      <path d="M11.5 7.8c0-1 .8-1.8 1.8-1.8h5.4c1 0 1.8.8 1.8 1.8" fill="none" stroke="#1b2a32" stroke-width="1.8"/>
+      <circle cx="13.4" cy="4.4" r="1.2" fill="#16865f"/>
+      <circle cx="18.6" cy="4.4" r="1.2" fill="#2c6fbb"/>
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24">
+      <rect x="8" y="2" width="8" height="4" rx="1"/>
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+      <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24">
+      <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z"/>
+    </symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24">
+      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+      <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24">
+      <path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/>
+      <path d="M21 3v5h-5"/>
+    </symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <path d="m16 17 5-5-5-5M21 12H9"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24">
+      <path d="M20 6 9 17l-5-5"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24">
+      <path d="M18 6 6 18M6 6l12 12"/>
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24">
+      <path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8Zm0 0L15 7m0 0 3 3 4-4-3-3-4 4Z"/>
+    </symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24">
+      <path d="M2.06 12.35a1 1 0 0 1 0-.7C3.42 8.05 7.34 5 12 5s8.58 3.05 9.94 6.65a1 1 0 0 1 0 .7C20.58 15.95 16.66 19 12 19s-8.58-3.05-9.94-6.65Z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </symbol>
+  </svg>
+
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="brand-mark">
+          <svg><use href="#i-fries"></use></svg>
+        </span>
+        <div>
+          <h1>薯条校园</h1>
+          <p>吉首大学 · 管理员后台</p>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>管理员密码</span>
+        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="请输入管理员密码">
+      </label>
+      <button class="button button-block" type="button" id="loginBtn">
+        <svg class="mini-icon"><use href="#i-key"></use></svg>
+        进入后台
+      </button>
+      <p class="login-error" id="loginError">密码错误或服务暂时不可用。</p>
+    </div>
+  </section>
+
+  <section class="admin-screen" id="adminScreen">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark">
+            <svg><use href="#i-fries"></use></svg>
+          </span>
+          <span class="brand-copy">
+            <strong>薯条校园 · 管理员后台</strong>
+            <small>吉首大学四个校区</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <span class="status-pill"><span class="dot"></span>云端管理已连接</span>
+          <button class="button button-ghost button-small" type="button" id="refreshBtn">
+            <svg class="mini-icon"><use href="#i-refresh"></use></svg>
+            刷新
+          </button>
+          <button class="button button-soft button-small" type="button" id="logoutBtn">
+            <svg class="mini-icon"><use href="#i-logout"></use></svg>
+            退出
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <div class="page-heading">
+        <div>
+          <p class="section-kicker">CAMPUS OPERATIONS</p>
+          <h2>订单、用户与认证管理中心</h2>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="panel">
+        <div class="panel-toolbar">
+          <div class="tabs" role="tablist">
+            <button class="tab-btn is-active" type="button" data-tab="users">
+              <svg class="mini-icon"><use href="#i-users"></use></svg>
+              用户管理
+            </button>
+            <button class="tab-btn" type="button" data-tab="orders">
+              <svg class="mini-icon"><use href="#i-clipboard"></use></svg>
+              订单管理
+            </button>
+            <button class="tab-btn" type="button" data-tab="certs">
+              <svg class="mini-icon"><use href="#i-shield"></use></svg>
+              认证审核
+            </button>
+          </div>
+          <label class="search-box">
+            <svg><use href="#i-search"></use></svg>
+            <input id="adminSearch" type="search" placeholder="搜索用户、订单、校区或课程">
+          </label>
+        </div>
+        <div id="adminContent"></div>
+      </div>
+    </main>
+  </section>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div>
+          <p class="section-kicker" id="modalKicker">ACTION</p>
+          <h3 id="modalTitle">确认操作</h3>
+        </div>
+        <button class="icon-btn" type="button" id="modalClose" aria-label="关闭">
+          <svg><use href="#i-x"></use></svg>
+        </button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal-actions" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var API_BASE = "https://fries-cus-admin-fries-c-service-phxyhytfad.cn-beijing.fcapp.run";
+      var TOKEN_KEY = "fries-campus-admin-token";
+      var token = sessionStorage.getItem(TOKEN_KEY) || "";
+      var state = null;
+      var activeTab = "users";
+      var searchText = "";
+      var pendingAction = null;
+
+      var CAMPUSES = {
+        shaziao: "砂子坳校区",
+        datianwan: "大田湾校区",
+        leigongjing: "雷公井校区",
+        zhangjiajie: "张家界校区"
+      };
+
+      var STATUS_META = {
+        open: { label: "待接单", className: "badge-yellow" },
+        progress: { label: "进行中", className: "badge-blue" },
+        submitted: { label: "待确认", className: "badge-yellow" },
+        completed: { label: "已完成", className: "badge-green" },
+        cancelled: { label: "已取消", className: "badge-red" }
+      };
+
+      var CERT_STATUS_META = {
+        none: { label: "未认证", className: "badge-gray" },
+        pending: { label: "审核中", className: "badge-yellow" },
+        approved: { label: "已认证", className: "badge-green" },
+        rejected: { label: "已驳回", className: "badge-red" },
+        revoked: { label: "已取消", className: "badge-red" }
+      };
+
+      var dom = {
+        loginScreen: document.getElementById("loginScreen"),
+        adminScreen: document.getElementById("adminScreen"),
+        passwordInput: document.getElementById("passwordInput"),
+        loginBtn: document.getElementById("loginBtn"),
+        loginError: document.getElementById("loginError"),
+        logoutBtn: document.getElementById("logoutBtn"),
+        refreshBtn: document.getElementById("refreshBtn"),
+        statsGrid: document.getElementById("statsGrid"),
+        adminSearch: document.getElementById("adminSearch"),
+        adminContent: document.getElementById("adminContent"),
+        modalBackdrop: document.getElementById("modalBackdrop"),
+        modalKicker: document.getElementById("modalKicker"),
+        modalTitle: document.getElementById("modalTitle"),
+        modalBody: document.getElementById("modalBody"),
+        modalFooter: document.getElementById("modalFooter"),
+        modalClose: document.getElementById("modalClose"),
+        toast: document.getElementById("toast")
+      };
+
+      function icon(name) {
+        return '<svg class="mini-icon"><use href="#i-' + name + '"></use></svg>';
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function toast(message) {
+        dom.toast.textContent = message;
+        dom.toast.classList.add("is-visible");
+        window.clearTimeout(toast._timer);
+        toast._timer = window.setTimeout(function () {
+          dom.toast.classList.remove("is-visible");
+        }, 2200);
+      }
+
+      function formatMoney(value) {
+        return "¥" + Number(value || 0).toFixed(2);
+      }
+
+      function campusName(id) {
+        return CAMPUSES[id] || id || "未知校区";
+      }
+
+      function statusBadge(status, meta) {
+        var item = meta[status] || { label: status || "未知", className: "badge-gray" };
+        return '<span class="badge ' + item.className + '">' + escapeHtml(item.label) + "</span>";
+      }
+
+      function formatDate(value) {
+        if (!value) return "-";
+        var date = new Date(value);
+        if (Number.isNaN(date.getTime())) return escapeHtml(value);
+        return date.toLocaleString("zh-CN", {
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function request(path, options) {
+        var opts = options || {};
+        var headers = Object.assign({
+          "Content-Type": "application/json"
+        }, opts.headers || {});
+        if (token) {
+          headers.Authorization = "Bearer " + token;
+        }
+        return fetch(API_BASE + path, {
+          method: opts.method || "GET",
+          headers: headers,
+          body: opts.body ? JSON.stringify(opts.body) : undefined
+        }).then(function (response) {
+          return response.json().catch(function () {
+            return { ok: false, message: "服务返回异常" };
+          }).then(function (data) {
+            if (response.status === 401) {
+              logout(false);
+              throw new Error(data.message || "登录已过期，请重新登录");
+            }
+            if (!response.ok || data.ok === false) {
+              throw new Error(data.message || "请求失败");
+            }
+            return data;
+          });
+        });
+      }
+
+      function showLogin() {
+        token = "";
+        sessionStorage.removeItem(TOKEN_KEY);
+        dom.loginScreen.style.display = "grid";
+        dom.adminScreen.classList.remove("is-active");
+        dom.adminScreen.style.display = "none";
+        window.setTimeout(function () {
+          dom.passwordInput.focus();
+        }, 50);
+      }
+
+      function showAdmin() {
+        dom.loginScreen.style.display = "none";
+        dom.adminScreen.classList.add("is-active");
+        dom.adminScreen.style.display = "block";
+      }
+
+      function logout(showMessage) {
+        token = "";
+        sessionStorage.removeItem(TOKEN_KEY);
+        state = null;
+        showLogin();
+        if (showMessage !== false) {
+          toast("已退出管理员后台");
+        }
+      }
+
+      function loadState() {
+        return request("/admin/state").then(function (data) {
+          state = data.state;
+          showAdmin();
+          render();
+        });
+      }
+
+      function login() {
+        var password = dom.passwordInput.value;
+        dom.loginError.classList.remove("is-visible");
+        dom.loginBtn.disabled = true;
+        dom.loginBtn.textContent = "正在验证...";
+
+        fetch(API_BASE + "/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: password })
+        }).then(function (response) {
+          return response.json().catch(function () {
+            return { ok: false, message: "服务返回异常" };
+          }).then(function (data) {
+            if (!response.ok || !data.ok) {
+              throw new Error(data.message || "密码错误");
+            }
+            token = data.token;
+            sessionStorage.setItem(TOKEN_KEY, token);
+            return loadState();
+          });
+        }).catch(function (error) {
+          dom.loginError.textContent = error.message || "密码错误或服务暂时不可用";
+          dom.loginError.classList.add("is-visible");
+        }).finally(function () {
+          dom.loginBtn.disabled = false;
+          dom.loginBtn.innerHTML = icon("key") + " 进入后台";
+        });
+      }
+
+      function normalizeText(value) {
+        return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+      }
+
+      function filteredUsers() {
+        if (!state || !state.users) return [];
+        var query = normalizeText(searchText);
+        return state.users.filter(function (user) {
+          if (!query) return true;
+          return [
+            user.name,
+            user.phone,
+            user.id,
+            campusName(user.campusId),
+            user.role
+          ].some(function (value) {
+            return normalizeText(value).indexOf(query) !== -1;
+          });
+        });
+      }
+
+      function filteredOrders() {
+        if (!state || !state.orders) return [];
+        var query = normalizeText(searchText);
+        return state.orders.filter(function (order) {
+          if (!query) return true;
+          return [
+            order.id,
+            order.type,
+            order.course,
+            order.location,
+            order.posterName,
+            order.workerName,
+            campusName(order.campusId)
+          ].some(function (value) {
+            return normalizeText(value).indexOf(query) !== -1;
+          });
+        });
+      }
+
+      function filteredCerts() {
+        if (!state || !state.certifications) return [];
+        var query = normalizeText(searchText);
+        return state.certifications.filter(function (cert) {
+          if (!query) return true;
+          return [
+            cert.name,
+            cert.studentNo,
+            cert.phone,
+            cert.college,
+            campusName(cert.campusId)
+          ].some(function (value) {
+            return normalizeText(value).indexOf(query) !== -1;
+          });
+        });
+      }
+
+      function render() {
+        renderStats();
+        renderContent();
+      }
+
+      function renderStats() {
+        var users = state.users || [];
+        var orders = state.orders || [];
+        var certs = state.certifications || [];
+        var pending = certs.filter(function (cert) {
+          return cert.status === "pending";
+        }).length;
+        var openOrders = orders.filter(function (order) {
+          return order.status === "open";
+        }).length;
+        var totalBalance = users.reduce(function (sum, user) {
+          return sum + Number(user.balance || 0);
+        }, 0);
+
+        var cards = [
+          { icon: "i-users", label: "用户总数", value: String(users.length), tone: "green" },
+          { icon: "i-clipboard", label: "待接订单", value: String(openOrders), tone: "blue" },
+          { icon: "i-shield", label: "待审核认证", value: String(pending), tone: "yellow" },
+          { icon: "i-wallet", label: "用户余额合计", value: formatMoney(totalBalance), tone: "red" }
+        ];
+
+        dom.statsGrid.innerHTML = cards.map(function (card) {
+          return '<div class="stat-card"><div class="stat-icon">' + icon(card.icon.replace("i-", "")) + '</div><div class="stat-label">' + card.label + '</div><div class="stat-value">' + escapeHtml(card.value) + "</div></div>";
+        }).join("");
+      }
+
+      function renderContent() {
+        dom.adminContent.innerHTML = "";
+        if (activeTab === "users") {
+          dom.adminContent.appendChild(renderUsers());
+        } else if (activeTab === "orders") {
+          dom.adminContent.appendChild(renderOrders());
+        } else {
+          dom.adminContent.appendChild(renderCerts());
+        }
+      }
+
+      function makeTable(headers, rows) {
+        var table = document.createElement("div");
+        table.className = "data-wrap";
+        table.innerHTML = '<table class="data-table"><thead><tr>' +
+          headers.map(function (header) { return "<th>" + escapeHtml(header) + "</th>"; }).join("") +
+          "</tr></thead><tbody>" + rows.join("") + "</tbody></table>";
+        return table;
+      }
+
+      function renderUsers() {
+        var users = filteredUsers();
+        if (!users.length) {
+          return emptyState("暂无匹配用户", "试试更换搜索关键词。");
+        }
+
+        var rows = users.map(function (user) {
+          var certStatus = user.certificationStatus || "none";
+          var role = user.role === "admin" ? "管理员" : "学生";
+          return "<tr>" +
+            "<td><div class=\"cell-title\">" + escapeHtml(user.name || "未命名") + "</div><div class=\"cell-sub\">ID: " + escapeHtml(user.id) + "</div></td>" +
+            "<td>" + escapeHtml(user.phone || "-") + "</td>" +
+            "<td>" + escapeHtml(campusName(user.campusId)) + "</td>" +
+            "<td>" + escapeHtml(role) + "</td>" +
+            "<td>" + statusBadge(certStatus, CERT_STATUS_META) + "</td>" +
+            "<td><strong>" + formatMoney(user.balance) + "</strong></td>" +
+            "<td><div class=\"actions\">" +
+              '<button class="button button-small button-soft" type="button" data-action="adjustBalance" data-user-id="' + escapeHtml(user.id) + '">' + icon("wallet") + "调整余额</button>" +
+              (certStatus === "approved" ? '<button class="button button-small button-danger" type="button" data-action="revokeCert" data-user-id="' + escapeHtml(user.id) + '">' + icon("x") + "取消认证</button>" : "") +
+            "</div></td>" +
+            "</tr>";
+        });
+
+        return makeTable(["用户", "联系方式", "校区", "身份", "认证状态", "余额", "操作"], rows);
+      }
+
+      function renderOrders() {
+        var orders = filteredOrders();
+        if (!orders.length) {
+          return emptyState("暂无匹配订单", "试试更换搜索关键词。");
+        }
+
+        var rows = orders.map(function (order) {
+          var canCancel = order.status !== "cancelled" && order.status !== "completed";
+          return "<tr>" +
+            "<td><div class=\"cell-title\">" + escapeHtml(order.course || "未命名课程") + "</div><div class=\"cell-sub\">" + escapeHtml(order.id) + "</div></td>" +
+            "<td>" + escapeHtml(order.type || "-") + "</td>" +
+            "<td>" + escapeHtml(campusName(order.campusId)) + "</td>" +
+            "<td>" + escapeHtml(order.posterName || "-") + "</td>" +
+            "<td>" + escapeHtml(order.workerName || "未接单") + "</td>" +
+            "<td>" + statusBadge(order.status, STATUS_META) + "</td>" +
+            "<td><strong>" + formatMoney(order.price) + "</strong></td>" +
+            "<td><div class=\"actions\">" +
+              (canCancel ? '<button class="button button-small button-danger" type="button" data-action="cancelOrder" data-order-id="' + escapeHtml(order.id) + '">' + icon("x") + "取消订单</button>" : "") +
+            "</div></td>" +
+            "</tr>";
+        });
+
+        return makeTable(["课程", "类型", "校区", "发布者", "接单者", "状态", "金额", "操作"], rows);
+      }
+
+      function renderCerts() {
+        var certs = filteredCerts();
+        if (!certs.length) {
+          return emptyState("暂无认证记录", "学生上传认证资料后会显示在这里。");
+        }
+
+        var list = document.createElement("div");
+        list.className = "card-list";
+        list.innerHTML = certs.map(function (cert) {
+          var user = (state.users || []).find(function (item) { return item.id === cert.userId; });
+          var actions = "";
+          if (cert.status === "pending") {
+            actions = '<button class="button button-small" type="button" data-action="approveCert" data-cert-id="' + escapeHtml(cert.id) + '">' + icon("check") + "通过</button>" +
+              '<button class="button button-small button-danger" type="button" data-action="rejectCert" data-cert-id="' + escapeHtml(cert.id) + '">' + icon("x") + "驳回</button>";
+          } else if (cert.status === "approved" && user) {
+            actions = '<button class="button button-small button-danger" type="button" data-action="revokeCert" data-user-id="' + escapeHtml(user.id) + '">' + icon("x") + "取消认证</button>";
+          }
+
+          return '<article class="cert-card">' +
+            '<div class="cert-card-head"><div><h3>' + escapeHtml(cert.name || "未命名") + "</h3><div class=\"cell-sub\">" + escapeHtml(cert.studentNo || "-") + " · " + escapeHtml(cert.phone || "-") + "</div></div>" + statusBadge(cert.status, CERT_STATUS_META) + "</div>" +
+            '<div class="cert-facts">' +
+              '<div class="fact"><span>校区</span><strong>' + escapeHtml(campusName(cert.campusId)) + "</strong></div>" +
+              '<div class="fact"><span>学院</span><strong>' + escapeHtml(cert.college || "-") + "</strong></div>" +
+              '<div class="fact"><span>提交时间</span><strong>' + formatDate(cert.submittedAt) + "</strong></div>" +
+              '<div class="fact"><span>审核时间</span><strong>' + formatDate(cert.reviewedAt) + "</strong></div>" +
+            "</div>" +
+            (cert.fileDataUrl ? '<img class="cert-preview" src="' + escapeHtml(cert.fileDataUrl) + '" alt="认证资料预览">' : "") +
+            (cert.reviewNote ? '<div class="cell-sub">审核备注：' + escapeHtml(cert.reviewNote) + "</div>" : "") +
+            '<div class="actions">' + actions + "</div>" +
+            "</article>";
+        }).join("");
+        return list;
+      }
+
+      function emptyState(title, description) {
+        var wrapper = document.createElement("div");
+        wrapper.className = "empty-state";
+        wrapper.innerHTML = '<div class="empty-icon">' + icon("search") + '</div><h3>' + escapeHtml(title) + '</h3><p>' + escapeHtml(description) + "</p>";
+        return wrapper;
+      }
+
+      function openModal(kicker, title, bodyHtml, actions) {
+        dom.modalKicker.textContent = kicker;
+        dom.modalTitle.textContent = title;
+        dom.modalBody.innerHTML = bodyHtml;
+        dom.modalFooter.innerHTML = actions;
+        dom.modalBackdrop.hidden = false;
+      }
+
+      function closeModal() {
+        dom.modalBackdrop.hidden = true;
+        pendingAction = null;
+      }
+
+      function runAction(action, body) {
+        return request("/admin/action", {
+          method: "POST",
+          body: Object.assign({ action: action }, body || {})
+        }).then(function (data) {
+          state = data.state;
+          closeModal();
+          render();
+          toast("操作已完成");
+        });
+      }
+
+      function openAdjustBalance(user) {
+        pendingAction = { type: "adjustBalance", user: user };
+        openModal("BALANCE", "调整余额", '<label class="field"><span>' + escapeHtml(user.name) + " 当前余额：" + formatMoney(user.balance) + '</span><input id="balanceAmount" type="number" step="0.01" placeholder="输入增加或减少的金额，例如 -20"></label>',
+          '<button class="button button-ghost" type="button" data-modal-cancel>取消</button><button class="button" type="button" data-modal-confirm>保存调整</button>');
+      }
+
+      function openRejectCert(cert) {
+        pendingAction = { type: "rejectCert", cert: cert };
+        openModal("CERT", "驳回认证", '<label class="field"><span>驳回备注</span><textarea id="rejectNote" rows="4" placeholder="请填写驳回原因，学生会看到这段说明。">认证资料未通过审核，请重新提交。</textarea></label>',
+          '<button class="button button-ghost" type="button" data-modal-cancel>取消</button><button class="button button-danger" type="button" data-modal-confirm>确认驳回</button>');
+      }
+
+      function openRevokeCert(user) {
+        pendingAction = { type: "revokeCert", user: user };
+        openModal("CERT", "取消认证资格", '<p>确认取消 <strong>' + escapeHtml(user.name) + "</strong> 的接单认证资格吗？取消后该用户将不能接单。</p>",
+          '<button class="button button-ghost" type="button" data-modal-cancel>暂不取消</button><button class="button button-danger" type="button" data-modal-confirm>确认取消</button>');
+      }
+
+      function openCancelOrder(order) {
+        pendingAction = { type: "cancelOrder", order: order };
+        openModal("ORDER", "取消订单", '<p>确认取消课程 <strong>' + escapeHtml(order.course) + "</strong> 的订单吗？取消后订单会标记为已取消。</p>",
+          '<button class="button button-ghost" type="button" data-modal-cancel>返回</button><button class="button button-danger" type="button" data-modal-confirm>确认取消订单</button>');
+      }
+
+      function confirmPendingAction() {
+        if (!pendingAction) return;
+        if (pendingAction.type === "adjustBalance") {
+          var amount = Number(document.getElementById("balanceAmount").value);
+          if (!Number.isFinite(amount)) {
+            toast("请输入有效金额");
+            return;
+          }
+          runAction("adjustBalance", { userId: pendingAction.user.id, amount: amount });
+        } else if (pendingAction.type === "rejectCert") {
+          var note = document.getElementById("rejectNote").value;
+          runAction("rejectCert", { certId: pendingAction.cert.id, note: note });
+        } else if (pendingAction.type === "revokeCert") {
+          runAction("revokeCert", { userId: pendingAction.user.id, note: "管理员取消认证资格。" });
+        } else if (pendingAction.type === "cancelOrder") {
+          runAction("cancelOrder", { orderId: pendingAction.order.id });
+        }
+      }
+
+      function handleAdminActionButton(button) {
+        var action = button.getAttribute("data-action");
+        var userId = button.getAttribute("data-user-id");
+        var certId = button.getAttribute("data-cert-id");
+        var orderId = button.getAttribute("data-order-id");
+
+        if (action === "adjustBalance") {
+          var user = state.users.find(function (item) { return item.id === userId; });
+          if (user) openAdjustBalance(user);
+        } else if (action === "approveCert") {
+          runAction("approveCert", { certId: certId });
+        } else if (action === "rejectCert") {
+          var cert = state.certifications.find(function (item) { return item.id === certId; });
+          if (cert) openRejectCert(cert);
+        } else if (action === "revokeCert") {
+          var targetUser = state.users.find(function (item) { return item.id === userId; });
+          if (targetUser) openRevokeCert(targetUser);
+        } else if (action === "cancelOrder") {
+          var order = state.orders.find(function (item) { return item.id === orderId; });
+          if (order) openCancelOrder(order);
+        }
+      }
+
+      function bindEvents() {
+        dom.loginBtn.addEventListener("click", login);
+        dom.passwordInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") login();
+        });
+        dom.logoutBtn.addEventListener("click", function () {
+          logout(true);
+        });
+        dom.refreshBtn.addEventListener("click", function () {
+          dom.refreshBtn.disabled = true;
+          loadState().catch(function (error) {
+            toast(error.message);
+          }).finally(function () {
+            dom.refreshBtn.disabled = false;
+          });
+        });
+        dom.adminSearch.addEventListener("input", function () {
+          searchText = dom.adminSearch.value;
+          renderContent();
+        });
+
+        document.querySelectorAll(".tab-btn").forEach(function (button) {
+          button.addEventListener("click", function () {
+            document.querySelectorAll(".tab-btn").forEach(function (item) {
+              item.classList.remove("is-active");
+            });
+            button.classList.add("is-active");
+            activeTab = button.getAttribute("data-tab");
+            renderContent();
+          });
+        });
+
+        dom.adminContent.addEventListener("click", function (event) {
+          var button = event.target.closest("[data-action]");
+          if (button) handleAdminActionButton(button);
+        });
+
+        dom.modalClose.addEventListener("click", closeModal);
+        dom.modalBackdrop.addEventListener("click", function (event) {
+          if (event.target === dom.modalBackdrop) closeModal();
+        });
+        dom.modalFooter.addEventListener("click", function (event) {
+          var button = event.target.closest("[data-modal-confirm], [data-modal-cancel]");
+          if (!button) return;
+          if (button.hasAttribute("data-modal-confirm")) {
+            confirmPendingAction();
+          } else {
+            closeModal();
+          }
+        });
+      }
+
+      function init() {
+        bindEvents();
+        if (token) {
+          loadState().catch(function (error) {
+            showLogin();
+          });
+        } else {
+          showLogin();
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
