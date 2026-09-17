@@ -6,10 +6,9 @@
   const SERVICE_FEE_RATE = FriesPay.SERVICE_FEE_RATE;
   const SERVER_BASE = "https://fries-cus-admin-fries-c-service-phxyhytfad.cn-beijing.fcapp.run";
   const SESSION_TOKEN_KEY = "fries-campus-session-token";
+  const CUSTOMER_SERVICE_WECHAT = "Hurrkan";
   let sessionToken = localStorage.getItem(SESSION_TOKEN_KEY) || "";
-  let serverStateReady = false;
-  let syncTimer = null;
-  let syncChain = Promise.resolve();
+  let authMode = "login";
 
   const CAMPUSES = [
     { id: "shaziao", name: "砂子坳校区", short: "砂子坳" },
@@ -83,6 +82,12 @@
   state.orders = loaded.orders;
 
   const dom = {
+    authOverlay: document.getElementById("authOverlay"),
+    authPhone: document.getElementById("authPhone"),
+    authPassword: document.getElementById("authPassword"),
+    authSubmit: document.getElementById("authSubmit"),
+    authError: document.getElementById("authError"),
+    logoutBtn: document.getElementById("logoutBtn"),
     campusFilters: document.getElementById("campusFilters"),
     statusFilters: document.getElementById("statusFilters"),
     overviewStats: document.getElementById("overviewStats"),
@@ -98,8 +103,9 @@
     orderTime: document.getElementById("orderTime"),
     price: document.getElementById("price"),
     previewOrderAmount: document.getElementById("previewOrderAmount"),
-    previewServiceFee: document.getElementById("previewServiceFee"),
+    previewPublisherFee: document.getElementById("previewPublisherFee"),
     previewTotal: document.getElementById("previewTotal"),
+    previewWorkerFee: document.getElementById("previewWorkerFee"),
     previewWorkerIncome: document.getElementById("previewWorkerIncome"),
     fillInfoBook: document.getElementById("fillInfoBook"),
     certPanel: document.getElementById("certPanel"),
@@ -133,12 +139,17 @@
   let evidenceFileDataUrl = null;
 
   init();
-  bootstrapFromServer();
+  bindAuthEvents();
+  if (sessionToken) {
+    bootstrap();
+  } else {
+    showAuth();
+  }
   window.setInterval(function () {
-    if (serverStateReady && document.visibilityState === "visible" && dom.modalBackdrop.hidden) {
-      bootstrapFromServer(true);
+    if (sessionToken && document.visibilityState === "visible" && dom.modalBackdrop.hidden) {
+      refreshState();
     }
-  }, 25000);
+  }, 30000);
 
   function init() {
     dom.orderDate.min = localISODate(0);
@@ -398,7 +409,7 @@
       statCell(String(openCount), "当前待接单"),
       statCell(String(todayCount), "今日新增"),
       statCell(`¥${average.toFixed(1)}`, "平均报酬"),
-      statCell("7%", "平台服务费"),
+      statCell("10%", "平台服务费"),
     ].join("");
   }
 
@@ -618,7 +629,9 @@
         <h3>费用与结算</h3>
         <div class="fee-breakdown">
           <div class="fee-line"><span>订单金额</span><strong>${formatMoney(fee.amount)}</strong></div>
-          <div class="fee-line"><span>平台服务费（7%）</span><strong>-${formatMoney(fee.serviceFee)}</strong></div>
+          <div class="fee-line"><span>发布方服务费（5%）</span><strong>+${formatMoney(fee.publisherFee)}</strong></div>
+          <div class="fee-line fee-highlight"><span>发单方支付</span><strong>${formatMoney(fee.publisherPays)}</strong></div>
+          <div class="fee-line"><span>接单方服务费（5%）</span><strong>-${formatMoney(fee.workerFee)}</strong></div>
           <div class="fee-line fee-highlight"><span>接单方到账</span><strong>${formatMoney(fee.workerIncome)}</strong></div>
         </div>
         <p class="payment-note">接单方上传凭证并由发单方确认收货后，${formatMoney(fee.workerIncome)} 才会进入接单方余额。</p>
@@ -674,6 +687,19 @@
     return `<div class="detail-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
   }
 
+  function runServerAction(actionBody, successMessage) {
+    return apiAction(actionBody).then(function (data) {
+      applyServerState(data);
+      renderAll();
+      if (successMessage) {
+        toast(successMessage);
+      }
+      return data;
+    }).catch(function (error) {
+      toast(error.message || "操作失败");
+    });
+  }
+
   function acceptOrder(id) {
     const order = state.orders.find((item) => item.id === id);
     if (!order || order.status !== "open") {
@@ -690,15 +716,8 @@
       switchView("cert");
       return;
     }
-
-    order.workerId = state.currentUserId;
-    order.workerName = currentUser().name;
-    order.status = "progress";
-    order.acceptedAt = new Date().toISOString();
-    saveState();
     closeModal();
-    toast("接单成功，完成后请上传凭证");
-    renderAll();
+    runServerAction({ action: "acceptOrder", orderId: id }, "接单成功，完成后请上传凭证");
   }
 
   function openEvidenceModal(id) {
@@ -751,17 +770,14 @@
       toast("请上传完成凭证照片");
       return;
     }
-    order.status = "submitted";
-    order.evidence = {
+    const evidence = {
       fileDataUrl: evidenceFileDataUrl,
       note: document.getElementById("evidenceNote")?.value.trim() || "",
       submittedAt: new Date().toISOString(),
     };
     evidenceFileDataUrl = null;
-    saveState();
     closeModal();
-    toast("凭证已提交，等待发单方确认收货");
-    renderAll();
+    runServerAction({ action: "submitEvidence", orderId: order.id, evidence }, "凭证已提交，等待发单方确认收货");
   }
 
   function confirmReceipt(id) {
@@ -771,13 +787,8 @@
       return;
     }
     const fee = FriesPay.calculateFee(order.price);
-    order.status = "completed";
-    order.completedAt = new Date().toISOString();
-    creditUserBalance(order.workerId, fee.workerIncome);
-    saveState();
     closeModal();
-    toast(`已确认收货，接单方收入 ${formatMoney(fee.workerIncome)} 已入余额`);
-    renderAll();
+    runServerAction({ action: "completeOrder", orderId: id }, `已确认收货，接单方收入 ${formatMoney(fee.workerIncome)} 已入余额`);
   }
 
   function cancelOrder(id) {
@@ -786,16 +797,8 @@
       toast("只能取消自己发布的待接订单");
       return;
     }
-
-    order.status = "cancelled";
-    order.cancelledAt = new Date().toISOString();
-    if (order.payment?.providerId === "balance") {
-      creditUserBalance(order.posterId, Number(order.price));
-    }
-    saveState();
     closeModal();
-    toast("订单已取消，支付金额已退回");
-    renderAll();
+    runServerAction({ action: "cancelOrder", orderId: id }, "订单已取消，支付金额已退回");
   }
 
   function handlePublishSubmit(event) {
@@ -834,7 +837,6 @@
 
   function createOrderFromDraft(draft, paymentResult, providerId) {
     const order = {
-      id: generateId(),
       type: draft.type,
       course: draft.course,
       campusId: draft.campusId,
@@ -844,37 +846,27 @@
       price: draft.price,
       notes: draft.notes,
       contact: draft.contact,
-      posterId: state.currentUserId,
-      posterName: currentUser().name,
-      workerId: null,
-      workerName: null,
-      status: "open",
-      createdDate: localISODate(0),
-      createdAt: new Date().toISOString(),
-      paid: true,
       payment: {
         providerId: providerId || "sandbox",
-        transactionId: paymentResult.transactionId,
-        paidAt: paymentResult.paidAt,
+        transactionId: paymentResult && paymentResult.transactionId,
+        paidAt: paymentResult && paymentResult.paidAt,
       },
     };
 
-    state.orders.unshift(order);
-    saveState();
     document.getElementById("publishForm").reset();
     dom.orderDate.min = localISODate(0);
     dom.orderTime.value = "08:00";
     state.publishCampus = "shaziao";
     updateFeePreview();
     switchView("home");
-    renderOverviewStats();
-    toast("发布成功，订单已进入大厅");
+    runServerAction({ action: "publishOrder", order }, "发布成功，订单已进入大厅");
   }
 
   function openPaymentModal(options) {
     const isOrder = options.purpose === "order";
     const amount = Number(options.amount) || 0;
     const fee = isOrder ? FriesPay.calculateFee(amount) : null;
+    const payAmount = isOrder ? fee.publisherPays : amount;
     const gift = isOrder ? 0 : giftForAmount(amount);
     const currentBalance = currentUser().balance;
     const paymentOptions = getPaymentProviderOptions(isOrder, amount);
@@ -882,16 +874,17 @@
     state.payment = {
       purpose: options.purpose,
       amount,
+      payAmount,
       draft: options.draft || null,
       onSuccess: options.onSuccess,
-      selectedProvider: isOrder && currentBalance >= amount ? "balance" : "sandbox",
+      selectedProvider: isOrder && currentBalance >= payAmount ? "balance" : "sandbox",
       confirming: false,
       meta: { gift },
     };
 
     const providerButtons = paymentOptions
       .map((provider) => {
-        const disabled = provider.id === "balance" && currentBalance < amount;
+        const disabled = provider.id === "balance" && currentBalance < payAmount;
         return `<button class="payment-method ${state.payment.selectedProvider === provider.id ? "is-active" : ""}" type="button" data-payment-method="${provider.id}" ${disabled ? "disabled" : ""}>${icon(provider.icon)}<span>${escapeHtml(provider.name)}</span></button>`;
       })
       .join("");
@@ -899,7 +892,9 @@
     const breakdown = isOrder
       ? `
         <div class="fee-line"><span>订单金额</span><strong>${formatMoney(fee.amount)}</strong></div>
-        <div class="fee-line"><span>平台服务费（7%，从订单中扣除）</span><strong>-${formatMoney(fee.serviceFee)}</strong></div>
+        <div class="fee-line"><span>发布方服务费（5%）</span><strong>+${formatMoney(fee.publisherFee)}</strong></div>
+        <div class="fee-line fee-highlight"><span>发单方本次支付</span><strong>${formatMoney(fee.publisherPays)}</strong></div>
+        <div class="fee-line"><span>接单方服务费（5%）</span><strong>-${formatMoney(fee.workerFee)}</strong></div>
         <div class="fee-line fee-highlight"><span>接单方预计到账</span><strong>${formatMoney(fee.workerIncome)}</strong></div>
       `
       : `
@@ -996,10 +991,9 @@
     try {
       let result;
       if (providerId === "balance") {
-        if (currentUser().balance < payment.amount) {
+        if (currentUser().balance < payment.payAmount) {
           throw new Error("Insufficient balance");
         }
-        currentUser().balance = FriesPay.roundMoney(currentUser().balance - payment.amount);
         result = {
           success: true,
           providerId: "balance",
@@ -1017,7 +1011,6 @@
 
       const onSuccess = payment.onSuccess;
       const paidProviderId = providerId;
-      saveState();
       closeModal();
       onSuccess(result, paidProviderId);
     } catch (error) {
@@ -1124,8 +1117,7 @@
   }
 
   function saveInfoBook() {
-    const user = currentUser();
-    user.infoBook = {
+    const infoBook = {
       studentNo: document.getElementById("infoStudentNo").value.trim(),
       course: document.getElementById("infoCourse").value.trim(),
       type: document.getElementById("infoType").value,
@@ -1134,10 +1126,8 @@
       contact: document.getElementById("infoContact").value.trim(),
       notes: document.getElementById("infoNotes").value.trim(),
     };
-    saveState();
     closeModal();
-    renderInfoBookBar();
-    toast("信息簿已保存");
+    runServerAction({ action: "saveInfoBook", infoBook }, "信息簿已保存");
   }
 
   function applyInfoBookToPublish() {
@@ -1318,25 +1308,17 @@
     }
     const user = currentUser();
     const cert = {
-      id: generateId(),
-      userId: user.id,
       name: document.getElementById("certName").value.trim() || user.name,
       studentNo: document.getElementById("certStudentNo").value.trim(),
       campusId: document.getElementById("certCampus").value,
       college: document.getElementById("certCollege").value.trim(),
       phone: document.getElementById("certPhone").value.trim(),
       fileDataUrl: certFileDataUrl,
-      status: "pending",
-      submittedAt: new Date().toISOString(),
     };
-    state.certifications.unshift(cert);
-    user.certificationStatus = "pending";
-    user.certificationId = cert.id;
     certFileDataUrl = null;
-    saveState();
-    renderCertPanel();
-    renderMine();
-    toast("认证资料已提交，等待管理员审核");
+    runServerAction({ action: "submitCert", cert }, "认证资料已提交，等待管理员审核").then(function () {
+      renderCertPanel();
+    });
   }
 
   function openRechargeModal() {
@@ -1365,33 +1347,27 @@
         <span>满 200 送 20</span>
         <span>满 500 送 60</span>
       </div>
+      <div class="recharge-cs">
+        <span>充值需添加客服微信，人工核对后到账</span>
+        <strong>${CUSTOMER_SERVICE_WECHAT}</strong>
+        <button class="button button-ghost button-block" type="button" data-copy-text="${CUSTOMER_SERVICE_WECHAT}">
+          ${icon("copy")}
+          <span>复制客服微信号</span>
+        </button>
+      </div>
     `;
 
     openModal("余额充值", "RECHARGE", body, [
       { id: "cancel", label: "取消", icon: "x", variant: "button-ghost", onClick: closeModal },
       {
         id: "rechargeNext",
-        label: "立即充值",
-        icon: "credit-card",
+        label: "联系客服充值",
+        icon: "copy",
         variant: "button-primary",
         onClick: () => {
-          const input = document.getElementById("rechargeAmountInput");
-          const value = Number(input?.value || state.selectedRechargeAmount);
-          if (!Number.isFinite(value) || value <= 0) {
-            toast("请输入有效充值金额");
-            return;
-          }
-          openPaymentModal({
-            purpose: "recharge",
-            amount: value,
-            onSuccess(result) {
-              const finalAmount = value + giftForAmount(value);
-              creditUserBalance(state.currentUserId, finalAmount);
-              saveState();
-              renderAll();
-              toast(`充值成功，到账 ${formatMoney(finalAmount)}`);
-            },
-          });
+          copyText(CUSTOMER_SERVICE_WECHAT);
+          closeModal();
+          toast("请添加客服微信完成充值");
         },
       },
     ]);
@@ -1431,10 +1407,10 @@
           <span>可提现余额</span>
           <strong>${formatMoney(currentUser().balance)}</strong>
         </div>
-        <p class="payment-note">提现请联系管理员微信：<strong>Hurrkan</strong>。管理员核对订单和账户信息后人工处理提现。</p>
-        <button class="button button-ghost button-block" type="button" data-copy-text="Hurrkan">
+        <p class="payment-note">提现需先添加客服微信 <strong>${CUSTOMER_SERVICE_WECHAT}</strong>，核对订单和账户信息后人工处理。</p>
+        <button class="button button-ghost button-block" type="button" data-copy-text="${CUSTOMER_SERVICE_WECHAT}">
           ${icon("copy")}
-          <span>复制管理员微信号</span>
+          <span>复制客服微信号</span>
         </button>
       </div>
     `;
@@ -1863,8 +1839,9 @@
     const price = Number(dom.price.value) || 0;
     const fee = FriesPay.calculateFee(price);
     dom.previewOrderAmount.textContent = formatMoney(fee.amount);
-    dom.previewServiceFee.textContent = `-${formatMoney(fee.serviceFee)}`;
-    dom.previewTotal.textContent = formatMoney(fee.amount);
+    dom.previewPublisherFee.textContent = `+${formatMoney(fee.publisherFee)}`;
+    dom.previewTotal.textContent = formatMoney(fee.publisherPays);
+    dom.previewWorkerFee.textContent = `-${formatMoney(fee.workerFee)}`;
     dom.previewWorkerIncome.textContent = formatMoney(fee.workerIncome);
   }
 
@@ -1995,9 +1972,6 @@
     } catch (error) {
       console.warn("数据无法写入本地存储", error);
     }
-    if (serverStateReady) {
-      syncToServer();
-    }
   }
 
   function apiFetch(path, options) {
@@ -2017,10 +1991,23 @@
         return { ok: false, message: "服务返回异常" };
       }).then(function (data) {
         if (!response.ok || data.ok === false) {
-          throw new Error(data.message || "请求失败");
+          const error = new Error(data.message || "请求失败");
+          error.status = response.status;
+          throw error;
         }
         return data;
       });
+    });
+  }
+
+  function apiMe() {
+    return apiFetch("/api/me");
+  }
+
+  function apiAction(actionBody) {
+    return apiFetch("/api/action", {
+      method: "POST",
+      body: actionBody,
     });
   }
 
@@ -2028,54 +2015,120 @@
     if (!data || !data.state) {
       return;
     }
-    state.currentUserId = data.currentUserId || state.currentUserId;
+    if (data.user && data.user.id) {
+      state.currentUserId = data.user.id;
+    }
     state.users = Array.isArray(data.state.users) ? data.state.users : state.users;
     state.certifications = Array.isArray(data.state.certifications) ? data.state.certifications : state.certifications;
     state.orders = Array.isArray(data.state.orders) ? data.state.orders : state.orders;
-    serverStateReady = true;
   }
 
-  function syncToServer() {
-    if (!sessionToken || !serverStateReady) {
-      return Promise.resolve();
-    }
-    const snapshot = {
-      users: state.users,
-      certifications: state.certifications,
-      orders: state.orders,
-    };
-    syncChain = syncChain.then(function () {
-      return apiFetch("/api/sync", {
-        method: "POST",
-        body: snapshot,
-      }).then(function (data) {
-        applyServerState(data);
-      });
-    }).catch(function (error) {
-      console.warn("云端同步失败", error);
+  function showAuth() {
+    dom.authOverlay.hidden = false;
+    dom.authError.classList.remove("is-visible");
+    dom.authError.textContent = "";
+  }
+
+  function hideAuth() {
+    dom.authOverlay.hidden = true;
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    document.querySelectorAll("[data-auth-mode]").forEach(function (button) {
+      button.classList.toggle("is-active", button.dataset.authMode === mode);
     });
-    return syncChain;
+    dom.authSubmit.textContent = mode === "login" ? "登录" : "注册";
   }
 
-  function bootstrapFromServer(isRefresh) {
-    const tokenBefore = sessionToken;
-    const pendingSync = isRefresh ? syncToServer() : Promise.resolve();
-    return pendingSync.then(function () {
-      return apiFetch("/api/session", {
-        method: "POST",
-        body: tokenBefore ? { token: tokenBefore } : {},
+  function bindAuthEvents() {
+    document.querySelectorAll("[data-auth-mode]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        setAuthMode(button.dataset.authMode);
       });
+    });
+    dom.authSubmit.addEventListener("click", handleAuthSubmit);
+    dom.authPassword.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        handleAuthSubmit();
+      }
+    });
+    if (dom.logoutBtn) {
+      dom.logoutBtn.addEventListener("click", logout);
+    }
+  }
+
+  function handleAuthSubmit() {
+    const phone = dom.authPhone.value.trim();
+    const password = dom.authPassword.value;
+    dom.authError.classList.remove("is-visible");
+    if (!/^1\d{10}$/.test(phone)) {
+      dom.authError.textContent = "请输入正确的11位手机号";
+      dom.authError.classList.add("is-visible");
+      return;
+    }
+    if (password.length < 6) {
+      dom.authError.textContent = "密码至少6位";
+      dom.authError.classList.add("is-visible");
+      return;
+    }
+    dom.authSubmit.disabled = true;
+    const path = authMode === "login" ? "/api/login" : "/api/register";
+    apiFetch(path, {
+      method: "POST",
+      body: { phone, password },
     }).then(function (data) {
       sessionToken = data.token;
       localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
+      hideAuth();
       applyServerState(data);
       renderAll();
-      if (!isRefresh) {
-        switchView("home");
-      }
+      switchView("home");
+      toast(authMode === "login" ? "登录成功" : "注册成功，已自动登录");
     }).catch(function (error) {
-      console.warn("云端会话初始化失败，将使用本地演示数据", error);
-      serverStateReady = false;
+      dom.authError.textContent = error.message || "操作失败，请重试";
+      dom.authError.classList.add("is-visible");
+    }).finally(function () {
+      dom.authSubmit.disabled = false;
+    });
+  }
+
+  function logout() {
+    sessionToken = "";
+    localStorage.removeItem(SESSION_TOKEN_KEY);
+    state.currentUserId = "me";
+    state.users = [];
+    state.certifications = [];
+    state.orders = [];
+    closeModal();
+    switchView("home");
+    showAuth();
+    toast("已退出登录");
+  }
+
+  function bootstrap() {
+    return apiMe().then(function (data) {
+      hideAuth();
+      applyServerState(data);
+      renderAll();
+      switchView("home");
+    }).catch(function (error) {
+      if (error.status === 401) {
+        sessionToken = "";
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+        showAuth();
+      } else {
+        console.warn("加载状态失败", error);
+      }
+    });
+  }
+
+  function refreshState() {
+    return apiMe().then(function (data) {
+      applyServerState(data);
+      renderAll();
+    }).catch(function () {
+      // ignore transient refresh errors
     });
   }
 

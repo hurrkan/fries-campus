@@ -1,5 +1,7 @@
 (function () {
-  const SERVICE_FEE_RATE = 0.07;
+  const SERVICE_FEE_RATE = 0.10;
+  const PUBLISHER_FEE_RATE = 0.05;
+  const WORKER_FEE_RATE = 0.05;
 
   function roundMoney(value) {
     return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -89,13 +91,18 @@
 
   window.FriesPay = {
     SERVICE_FEE_RATE,
+    PUBLISHER_FEE_RATE,
+    WORKER_FEE_RATE,
     roundMoney,
     calculateFee(price) {
       const amount = Number(price) || 0;
       return {
         amount: roundMoney(amount),
+        publisherFee: roundMoney(amount * PUBLISHER_FEE_RATE),
+        workerFee: roundMoney(amount * WORKER_FEE_RATE),
         serviceFee: roundMoney(amount * SERVICE_FEE_RATE),
-        workerIncome: roundMoney(amount * (1 - SERVICE_FEE_RATE)),
+        publisherPays: roundMoney(amount * (1 + PUBLISHER_FEE_RATE)),
+        workerIncome: roundMoney(amount * (1 - WORKER_FEE_RATE)),
       };
     },
     getProviders() {

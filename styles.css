@@ -2002,6 +2002,27 @@ svg {
   font-size: 12px;
 }
 
+.recharge-cs {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 14px;
+  background: #fff7df;
+  border: 1px solid #f1d382;
+  border-radius: var(--radius);
+}
+
+.recharge-cs span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.recharge-cs strong {
+  color: #8b5a00;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
 .withdraw-box {
   display: grid;
   gap: 14px;
@@ -2228,4 +2249,96 @@ svg {
   .heading-actions .button {
     flex: 1 1 auto;
   }
+}
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(22, 134, 95, 0.08), transparent 34%),
+    linear-gradient(315deg, rgba(255, 180, 0, 0.08), transparent 38%),
+    var(--bg);
+}
+
+.auth-overlay[hidden] {
+  display: none;
+}
+
+.auth-card {
+  width: min(420px, 100%);
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.auth-brand .brand-mark {
+  width: 50px;
+  height: 50px;
+}
+
+.auth-brand .brand-mark svg {
+  width: 36px;
+  height: 36px;
+}
+
+.auth-brand h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.auth-brand p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.auth-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 18px;
+  background: var(--surface-muted);
+  border-radius: var(--radius);
+}
+
+.auth-tab {
+  min-height: 34px;
+  padding: 7px 20px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.auth-tab.is-active {
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-error {
+  display: none;
+  margin: 10px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.auth-error.is-visible {
+  display: block;
 }

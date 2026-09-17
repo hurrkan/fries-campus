@@ -1319,6 +1319,7 @@
             "<td><strong>" + formatMoney(user.balance) + "</strong></td>" +
             "<td><div class=\"actions\">" +
               '<button class="button button-small button-soft" type="button" data-action="adjustBalance" data-user-id="' + escapeHtml(user.id) + '">' + icon("wallet") + "调整余额</button>" +
+              '<button class="button button-small button-blue" type="button" data-action="resetPassword" data-user-id="' + escapeHtml(user.id) + '">' + icon("key") + "修改密码</button>" +
               (certStatus === "approved" ? '<button class="button button-small button-danger" type="button" data-action="revokeCert" data-user-id="' + escapeHtml(user.id) + '">' + icon("x") + "取消认证</button>" : "") +
             "</div></td>" +
             "</tr>";
@@ -1424,6 +1425,12 @@
           '<button class="button button-ghost" type="button" data-modal-cancel>取消</button><button class="button" type="button" data-modal-confirm>保存调整</button>');
       }
 
+      function openResetPassword(user) {
+        pendingAction = { type: "resetPassword", user: user };
+        openModal("PASSWORD", "修改用户密码", '<label class="field"><span>' + escapeHtml(user.name) + "（" + escapeHtml(user.phone || "未绑定手机号") + '）</span><input id="newPassword" type="text" placeholder="输入新密码（至少6位）"></label>',
+          '<button class="button button-ghost" type="button" data-modal-cancel>取消</button><button class="button" type="button" data-modal-confirm>保存新密码</button>');
+      }
+
       function openRejectCert(cert) {
         pendingAction = { type: "rejectCert", cert: cert };
         openModal("CERT", "驳回认证", '<label class="field"><span>驳回备注</span><textarea id="rejectNote" rows="4" placeholder="请填写驳回原因，学生会看到这段说明。">认证资料未通过审核，请重新提交。</textarea></label>',
@@ -1458,6 +1465,13 @@
           runAction("revokeCert", { userId: pendingAction.user.id, note: "管理员取消认证资格。" });
         } else if (pendingAction.type === "cancelOrder") {
           runAction("cancelOrder", { orderId: pendingAction.order.id });
+        } else if (pendingAction.type === "resetPassword") {
+          var newPassword = document.getElementById("newPassword").value;
+          if (newPassword.length < 6) {
+            toast("新密码至少6位");
+            return;
+          }
+          runAction("resetPassword", { userId: pendingAction.user.id, newPassword: newPassword });
         }
       }
 
@@ -1470,6 +1484,9 @@
         if (action === "adjustBalance") {
           var user = state.users.find(function (item) { return item.id === userId; });
           if (user) openAdjustBalance(user);
+        } else if (action === "resetPassword") {
+          var user = state.users.find(function (item) { return item.id === userId; });
+          if (user) openResetPassword(user);
         } else if (action === "approveCert") {
           runAction("approveCert", { certId: certId });
         } else if (action === "rejectCert") {
